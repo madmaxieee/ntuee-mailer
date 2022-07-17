@@ -20,10 +20,10 @@ $ ntuee-mailer [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-- `check`: check wether a directory is a valid letter a...
-- `config`: configure the auto mailer a valid config file...
-- `create`: create a new letter from template
-- `send`: send emails to a list of recipients as...
+- `check`: check wether a directory is a valid letter
+- `config`: configure the auto mailer a valid config file
+- `new`: create a new letter from template
+- `send`: send emails to a list of recipients as
 
 ## `ntuee-mailer check`
 
@@ -86,14 +86,14 @@ $ ntuee-mailer config [OPTIONS]
 - `-s, --show`: Show config.ini [default: False]
 - `--help`: Show this message and exit.
 
-## `ntuee-mailer create`
+## `ntuee-mailer new`
 
 create a new letter from template
 
 **Usage**:
 
 ```console
-$ ntuee-mailer create [OPTIONS] LETTER_NAME
+$ ntuee-mailer new [OPTIONS] LETTER_NAME
 ```
 
 **Arguments**:

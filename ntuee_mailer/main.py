@@ -89,7 +89,7 @@ def send(
 
 
 @app.command()
-def create(letter_name: Optional[str] = typer.Argument(..., help="Name of letter")):
+def new(letter_name: Optional[str] = typer.Argument(..., help="Name of letter")):
     """create a new letter from template"""
     print("Creating a new letter")
 
