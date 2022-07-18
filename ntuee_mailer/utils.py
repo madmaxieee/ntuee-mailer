@@ -9,11 +9,15 @@
 import typer
 from rich import print
 from rich.progress import Progress, TextColumn
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm
+from configparser import ConfigParser
 from cerberus.errors import ValidationError, ErrorList
 
 import logging
 import time
+from pathlib import Path
+
+from .globals import *
 
 
 def richError(
@@ -119,15 +123,19 @@ def typerSelect(message: str, options: list) -> str:
         + message
     )
 
-    result = typer.prompt(prompt_message, value_proc=process_options, default=0,)
+    result = typer.prompt(
+        prompt_message,
+        value_proc=process_options,
+        default=0,
+    )
     print()
     return result
 
 
-def typerConfirm(message: str, countdown: int = 0) -> bool:
+def countdownConfirm(message: str, default=True, countdown: int = 0) -> bool:
     prompt_message = f"\n{message}"
     if countdown == 0:
-        result = Confirm.ask(prompt_message, default=False)
+        result = Confirm.ask(prompt_message, default=default)
     else:
         with Progress(
             TextColumn("[bold blue]{task.description}"), transient=True
@@ -140,7 +148,7 @@ def typerConfirm(message: str, countdown: int = 0) -> bool:
                     description=f' {countdown - i}{" ." * (countdown - i)}',
                 )
                 time.sleep(1)
-        result = Confirm.ask(prompt_message, default=False)
+        result = Confirm.ask(prompt_message, default=default)
     print()
     return result
 
@@ -155,10 +163,15 @@ DEBUG_LEVELS = [
 ]
 
 
-def setup_logger(filename, level):
+def setup_logger(file_path, level):
+    # create log file if it doesn't exist
+    if not Path(file_path).is_file():
+        with open(file_path, "w") as f:
+            pass
+
     logging.basicConfig(
         level=DEBUG_LEVELS[level],
-        filename=filename,
+        filename=file_path,
         format="%(asctime)s %(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %I:%M:%S %p",
     )

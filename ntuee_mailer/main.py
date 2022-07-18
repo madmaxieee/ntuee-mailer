@@ -43,17 +43,22 @@ def send(
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Quiet mode: less output"),
     debugLevel: int = typer.Option(
-        logging.NOTSET, "--debug", "-d", help="Debug level", min=0, max=5, clamp=True,
+        logging.NOTSET,
+        "--debug",
+        "-d",
+        help="Debug level",
+        min=0,
+        max=5,
+        clamp=True,
     ),
 ):
     """send emails to a list of recipients as configured in your letter"""
-    if not CONFIG_PATH.is_file():
-        print("Config file not found, generating a new one...")
-        shutil.copy("config-default.ini", CONFIG_PATH)
-
     if letter_path is None:
         letter_names = list(
-            filter(lambda letter: Path(letter).is_dir(), os.listdir("."),)
+            filter(
+                lambda letter: Path(letter).is_dir(),
+                os.listdir("."),
+            )
         )
 
         if len(letter_names) == 0:
@@ -62,24 +67,22 @@ def send(
             )
 
         letter_name = typerSelect("Please select a letter", letter_names)
-        letter_path = Path("letters") / letter_name
+        letter_path = Path(letter_name).absolute()
 
     print(f"Using letter [blue]{letter_path}\n")
 
-    if not Letter.check_letter(letter_path):
+    if not Letter.check_letter(letter_path, verbose=not quiet):
         richError(f"Invalid letter: {letter_path}")
         return
 
-    # create log file if it doesn't exist
-    if not (Path(letter_path) / "log.txt").exists():
-        with open(Path(letter_path) / "log.txt", "w") as f:
-            pass
-
-    setup_logger(Path(letter_path) / "log.txt", debugLevel)
+    setup_logger(letter_path / "log.txt", debugLevel)
 
     auto_mailer_config = AutoMailer.load_mailer_config(config_path)
     auto_mailer = AutoMailer(auto_mailer_config, quiet=quiet)
-    emails = Letter(letter_path, auto_mailer_config["account"]["name"],)
+    emails = Letter(
+        letter_path,
+        auto_mailer_config["account"]["name"],
+    )
     auto_mailer.login()
     auto_mailer.send_emails(emails, test=test)
     auto_mailer.check_bounce_backs()
@@ -93,7 +96,7 @@ def new(letter_name: Optional[str] = typer.Argument(..., help="Name of letter"))
     """create a new letter from template"""
     print("Creating a new letter")
 
-    TEMPLATE_PATH = "template_letter"
+    TEMPLATE_PATH = APP_ROOT / "template_letter"
     if not Letter.check_letter(TEMPLATE_PATH):
         richError("Can't find template letter")
         return
@@ -111,7 +114,10 @@ def new(letter_name: Optional[str] = typer.Argument(..., help="Name of letter"))
 @app.command()
 def check(
     letter_path: Path = typer.Argument(
-        ..., help="Path to letter directory", exists=True, file_okay=False,
+        ...,
+        help="Path to letter directory",
+        exists=True,
+        file_okay=False,
     ),
 ):
     """
@@ -146,7 +152,9 @@ def config(
     reset: bool = typer.Option(
         False, "--reset", "-r", help="Reset config.ini to default"
     ),
-    show: Optional[bool] = typer.Option(False, "--show", "-s", help="Show config.ini"),
+    list_config: Optional[bool] = typer.Option(
+        False, "--list", "-l", help="list current config"
+    ),
 ):
     """
     configure the auto mailer\n
@@ -163,12 +171,12 @@ def config(
     name=John Doe\n
     """
 
-    if show:
+    if list_config:
         typer.echo(Path(CONFIG_PATH).read_text())
         return
 
     if reset:
-        shutil.copy("config-default.ini", CONFIG_PATH)
+        shutil.copy(APP_ROOT / "config-default.ini", CONFIG_PATH)
         richSuccess("Config file reset to default")
         return
 
@@ -182,11 +190,6 @@ def config(
         shutil.copy(new_config_path, CONFIG_PATH)
         richSuccess(f"Config file copied to {CONFIG_PATH}")
         return
-
-    if not CONFIG_PATH.is_file():
-        print(f"Can't find config file at {APP_DIR}")
-        shutil.copy("config-default.ini", CONFIG_PATH)
-        richSuccess("config.ini created")
 
     config = AutoMailer.load_mailer_config(CONFIG_PATH)
 
@@ -203,16 +206,4 @@ def config(
                 config[section][key] = new_value
                 richSuccess(f"{section}.{key} updated")
 
-    new_config_parser = ConfigParser()
-
-    for section, vals in config.items():
-        new_config_parser[section] = vals
-
-    with open(CONFIG_PATH, "w") as f:
-        new_config_parser.write(f)
-
     richSuccess(f"Config file updated to {CONFIG_PATH}")
-
-
-if __name__ == "__main__":
-    app()

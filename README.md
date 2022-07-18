@@ -1,5 +1,7 @@
 # `ntuee-mailer`
 
+This is a simple mailer for NTU students to send letters in batches.
+
 **Installation**
 
 ```bash
@@ -20,10 +22,10 @@ $ ntuee-mailer [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-- `check`: check wether a directory is a valid letter
-- `config`: configure the auto mailer a valid config file
+- `check`: check wether a directory is a valid letter a...
+- `config`: configure the auto mailer a valid config file...
 - `new`: create a new letter from template
-- `send`: send emails to a list of recipients as
+- `send`: send emails to a list of recipients as...
 
 ## `ntuee-mailer check`
 
@@ -95,7 +97,7 @@ $ ntuee-mailer config [OPTIONS]
 
 - `-f, --file TEXT`: Path to new config file whose content will be copied to config.ini
 - `-r, --reset`: Reset config.ini to default [default: False]
-- `-s, --show`: Show config.ini [default: False]
+- `-l, --list`: list current config [default: False]
 - `--help`: Show this message and exit.
 
 ## `ntuee-mailer new`
@@ -133,7 +135,19 @@ $ ntuee-mailer send [OPTIONS] [LETTER_PATH]
 **Options**:
 
 - `-t, --test`: Test mode: send mail to yourself [default: False]
-- `-c, --config FILE`: Path to config.ini [default: /home/madmax/.config/ntuee_mailer-mailer/config.ini]
+- `-c, --config FILE`: Path to config.ini [default: /home/madmax/.config/ntuee-mailer/config.ini]
 - `-q, --quiet`: Quiet mode: less output [default: False]
 - `-d, --debug INTEGER RANGE`: Debug level [default: 0]
+- `--help`: Show this message and exit.
+
+## `ntuee-mailer test`
+
+**Usage**:
+
+```console
+$ ntuee-mailer test [OPTIONS]
+```
+
+**Options**:
+
 - `--help`: Show this message and exit.
