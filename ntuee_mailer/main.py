@@ -97,9 +97,7 @@ def new(letter_name: Optional[str] = typer.Argument(..., help="Name of letter"))
     print("Creating a new letter")
 
     TEMPLATE_PATH = APP_ROOT / "template_letter"
-    if not Letter.check_letter(TEMPLATE_PATH):
-        richError("Can't find template letter")
-        return
+
     if letter_name is None:
         letter_name = Prompt.ask("Please enter the letter name")
     try:
