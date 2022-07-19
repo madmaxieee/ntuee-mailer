@@ -87,6 +87,8 @@ class AutoMailer:
         for i in range(3):
             try:
                 self.SMTPserver.login(*self.__get_login_info())
+            except KeyboardInterrupt:
+                exit(1)
             except:
                 logging.info(f"Login failed {i+1} times")
                 richError(
@@ -105,7 +107,7 @@ class AutoMailer:
 
         if "userid" in self.config["account"]:
             userid = Prompt.ask(
-                "[blue]Username[/blue] default:",
+                "[blue]Username[/blue] saved user id:",
                 default=self.config["account"]["userid"],
             )
         else:
@@ -129,7 +131,7 @@ class AutoMailer:
         self.password = password
         return userid, password
 
-    def send_emails(self, letter: Letter, test: bool = False) -> None:
+    def send_emails(self, letter: Letter, test: bool = False, dry: bool = False) -> None:
         """send emails"""
         if self.verbose:
             print("-" * 50)
@@ -145,7 +147,7 @@ class AutoMailer:
 
         if not Confirm.ask(
             f"""
-You are abount to send email{'s' if len(letter) > 1 else ''} 
+You are about to send email{'s' if len(letter) > 1 else ''} 
 with your name set to [blue]'{self.config['account']['name']}'[/blue]
 to [blue]{len(letter)}[/blue] recipients? (please use test mode before you send emails)\n
 Do you want to continue?""",
@@ -157,10 +159,6 @@ Do you want to continue?""",
         if self.SMTPserver is None:
             logging.info("SMTP server is not connected, please connect first")
             richError("SMTP server is not connected, please connect first")
-
-        # only send one email in test mode
-        if test:
-            letter = [*letter][:1]
 
         self.email_addrs += letter.email_addrs
 
@@ -177,9 +175,16 @@ Do you want to continue?""",
         with progress:
             logging.info(f"Sending {len(letter)} emails")
             for email in progress.track(letter, description="Sending emails..."):
+                self.__server_rest()
+                
                 if test:
                     email["To"] = complete_school_email(self.userid)
-                success = self.send_email(email)
+                
+                if not dry:
+                    success = self.send_email(email)
+                else:
+                    success = True
+
                 if success:
                     if self.verbose:
                         progress.print(
@@ -187,7 +192,14 @@ Do you want to continue?""",
                         )
                 else:
                     progress.print(f'[red]failed to send email to {email["To"]}')
-                self.__server_rest()
+
+                # in test mode, send only one mail and quit
+                if test:
+                    break
+
+            if dry:
+                print("[red]This is a dry run, no emails were actually sent")
+
 
     def send_email(self, email: MIMEMultipart) -> None:
         """send email"""
@@ -258,12 +270,12 @@ Do you want to continue?""",
 
             email_contents = []
             # Concat message pieces:
-            for mssg in emails:
+            for msg in emails:
                 # some chinese character may not be able to parse,
                 # however, we only care about the bounce back notifications,
-                # which are alays in English
+                # which are always in English
                 try:
-                    email_contents.append(b"\r\n".join(mssg).decode("utf-8"))
+                    email_contents.append(b"\r\n".join(msg).decode("utf-8"))
                 except:
                     continue
 
@@ -304,16 +316,22 @@ Do you want to continue?""",
 
     def __server_rest(self):
         """for bypassing email server limitation"""
+        def rest(seconds: int):
+            progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True,
+            )
+            with progress:
+                progress.add_task(description="resting...")
+                time.sleep(seconds)
 
-        if self.total_count % 10 == 0 and self.total_count > 0:
-            print("resting...")
-            time.sleep(10)
-        if self.total_count % 130 == 0 and self.total_count > 0:
-            print("resting...")
-            time.sleep(20)
         if self.total_count % 260 == 0 and self.total_count > 0:
-            print("resting...")
-            time.sleep(20)
+            rest(50)
+        elif self.total_count % 10 == 0 and self.total_count > 0:
+            rest(30)
+        elif self.total_count % 130 == 0 and self.total_count > 0:
+            rest(10)
 
     def __createSMTPServer(self) -> smtplib.SMTP_SSL:
         """create SMTP server"""

@@ -13,6 +13,7 @@ from rich.prompt import Confirm, Prompt
 import os
 import logging
 import shutil
+import time
 from pathlib import Path
 from typing import Optional
 from configparser import ConfigParser
@@ -51,6 +52,9 @@ def send(
         max=5,
         clamp=True,
     ),
+    dryRun: bool = typer.Option(
+        False, "--dry-run", help="Dry run: do not send mails"
+    ),
 ):
     """send emails to a list of recipients as configured in your letter"""
     if letter_path is None:
@@ -77,6 +81,14 @@ def send(
 
     setup_logger(letter_path / "log.txt", debugLevel)
 
+    if test:
+        print("[blue]Entering test mode...\n")
+        time.sleep(1)
+
+    if dryRun:
+        print("[blue]Entering dry run mode...\n")
+        time.sleep(1)
+
     auto_mailer_config = AutoMailer.load_mailer_config(config_path)
     auto_mailer = AutoMailer(auto_mailer_config, quiet=quiet)
     emails = Letter(
@@ -84,7 +96,7 @@ def send(
         auto_mailer_config["account"]["name"],
     )
     auto_mailer.login()
-    auto_mailer.send_emails(emails, test=test)
+    auto_mailer.send_emails(emails, test=test, dry=dryRun)
     auto_mailer.check_bounce_backs()
     richSuccess(
         f"{auto_mailer.success_count} / {auto_mailer.total_count} emails sent successfully"
