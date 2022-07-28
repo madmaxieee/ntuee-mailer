@@ -175,7 +175,7 @@ Do you want to continue?""",
         with progress:
             logging.info(f"Sending {len(letter)} emails")
             for email in progress.track(letter, description="Sending emails..."):
-                self.__server_rest()
+                self.__server_rest(progress)
                 
                 if test:
                     email["To"] = complete_school_email(self.userid)
@@ -314,24 +314,17 @@ Do you want to continue?""",
 
         self.success_count -= len(bounced_list)
 
-    def __server_rest(self):
+    def __server_rest(self, progress):
         """for bypassing email server limitation"""
-        def rest(seconds: int):
-            progress = Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                transient=True,
-            )
-            with progress:
-                progress.add_task(description="resting...")
-                time.sleep(seconds)
-
         if self.total_count % 260 == 0 and self.total_count > 0:
-            rest(50)
-        elif self.total_count % 10 == 0 and self.total_count > 0:
-            rest(30)
+            progress.print("resting...")
+            time.sleep(50)
         elif self.total_count % 130 == 0 and self.total_count > 0:
-            rest(10)
+            progress.print("resting...")
+            time.sleep(30)
+        elif self.total_count % 10 == 0 and self.total_count > 0:
+            progress.print("resting...")
+            time.sleep(10)
 
     def __createSMTPServer(self) -> smtplib.SMTP_SSL:
         """create SMTP server"""

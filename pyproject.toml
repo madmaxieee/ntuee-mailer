@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ntuee-mailer"
-version = "2.0.5"
+version = "2.0.6"
 description = "an auto mailer to send emails in batch for you"
 authors = ["zhuang-jia-xu <76544194+zhuang-jia-xu@users.noreply.github.com>"]
 license = "MIT"
