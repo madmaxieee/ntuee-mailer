@@ -316,15 +316,16 @@ Do you want to continue?""",
 
     def __server_rest(self, progress):
         """for bypassing email server limitation"""
+        def rest(seconds):
+            progress.print(f"[blue]resting for {seconds} seconds...")
+            time.sleep(seconds)
+
         if self.total_count % 260 == 0 and self.total_count > 0:
-            progress.print("resting...")
-            time.sleep(50)
+            rest(50)
         elif self.total_count % 130 == 0 and self.total_count > 0:
-            progress.print("resting...")
-            time.sleep(30)
+            rest(30)
         elif self.total_count % 10 == 0 and self.total_count > 0:
-            progress.print("resting...")
-            time.sleep(10)
+            rest(10)
 
     def __createSMTPServer(self) -> smtplib.SMTP_SSL:
         """create SMTP server"""
