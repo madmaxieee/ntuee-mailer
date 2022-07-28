@@ -38,6 +38,8 @@ letter_config_schema = {
 
 v = Validator(letter_config_schema)
 
+RESERVED_FIELDS = ("email", "cc", "bcc")
+REQUIRED_FIELDS = ("email", "name")
 
 class Letter:
     paths: dict = None
@@ -178,11 +180,21 @@ class Letter:
 
         email["To"] = recipient["email"]
 
+        cc_list = []
         if "cc" in self.config:
-            email["Cc"] = ",".join(self.config["cc"])
+            cc_list += self.config["cc"]
+        if "cc" in recipient:
+            cc_list += [recipient["cc"]]
+        if len(cc_list) > 0: 
+            email["Cc"] = ",".join(cc_list)
 
+        bcc_list = []
         if "bcc" in self.config:
-            email["Bcc"] = ",".join(self.config["bcc"])
+            bcc_list += self.config["bcc"]
+        if "bcc" in recipient:
+            bcc_list += [recipient["bcc"]]
+        if len(bcc_list) > 0:
+            email["Bcc"] = ",".join(bcc_list)
 
         if "recipientTitle" in self.config:
             if "lastNameOnly" in self.config and self.config["lastNameOnly"]:
@@ -233,6 +245,14 @@ class Letter:
                     temp_row = {}
                     for key, value in row.items():
                         temp_row[key.strip()] = value.strip()
+
+                    if "email" in temp_row:
+                        temp_row["email"] = complete_school_email(temp_row["email"].lower())
+                    if "cc" in temp_row:
+                        temp_row["cc"] = complete_school_email(temp_row["cc"].lower())
+                    if "bcc" in temp_row:
+                        temp_row["bcc"] = complete_school_email(temp_row["bcc"].lower())
+                    
                     stripped_recipients.append(temp_row)
 
             return stripped_recipients
@@ -310,6 +330,20 @@ class Letter:
 
         is_valid = True
 
+        for required in REQUIRED_FIELDS:
+            if required not in stripped_recipients[0]:
+                if verbose:
+                    logging.error(
+                        f"{required} is a required field in the csv file, but not found"
+                    )
+                    richError(
+                        f"{required} is a required field in the csv file, but not found",
+                        terminate=False,
+                    )
+                    is_valid = False
+                else:
+                    return False
+                    
         for row in stripped_recipients:
             for i, (key, value) in enumerate(row.items()):
                 if key is None:
@@ -324,7 +358,7 @@ class Letter:
                     else:
                         return False
 
-                if (key == "email" or key == "name") and value == "":
+                if key in REQUIRED_FIELDS and value == "":
                     if verbose:
                         logging.error(
                             f"{key} cannot be empty, recipients.csv has no {key} at row {i}"
@@ -360,15 +394,29 @@ class Letter:
 
     @classmethod
     def validate_email_content(
-        cls, email_template: str, indexes: list, verbose=False
+        cls, email_template: str, csv_indexes: list, verbose=False
     ) -> bool:
         """validate email content"""
-        fields = re.findall(r"\$([_a-z][_a-z0-9]*)", email_template, re.M)
+        template_fields = re.findall(r"\$([_a-z][_a-z0-9]*)", email_template, re.M)
         is_valid = True
 
-        indexes = [f.strip() for f in fields] + ["sender"]
-        for field in fields:
-            if field not in indexes:
+        for reserved in RESERVED_FIELDS:
+            if reserved in template_fields:
+                if verbose:
+                    logging.error(
+                        f"{reserved} is a reserved field, it cannot be used in email template"
+                    )
+                    richError(
+                        f"{reserved} is a reserved field, it cannot be used in email template",
+                        terminate=False,
+                    )
+                    is_valid = False
+                else:
+                    return False
+
+        csv_indexes = [f.strip() for f in template_fields] + ["sender"]
+        for field in template_fields:
+            if field not in csv_indexes:
                 if verbose:
                     logging.error(f"letter template field '{field}' not found in csv")
                     richError(
