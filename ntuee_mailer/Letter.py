@@ -48,7 +48,7 @@ class Letter:
     email_addrs: List = None
     emails: List = None
 
-    def __init__(self, letter_path: str, sender_name: str):
+    def __init__(self, letter_path: str, sender_name: str, *, test_mode: bool = False):
         if not self.validate_letter_dir(letter_path, verbose=True):
             richError(f"{letter_path} is not a valid letter directory")
 
@@ -71,7 +71,7 @@ class Letter:
 
         self.csv = self.__load_recipients()
         self.email_addrs = [row["email"] for row in self.csv]
-        self.emails = self.__generate_emails()
+        self.emails = self.__generate_emails(test_mode=test_mode)
 
     def set_from_addr(self, from_addr: str):
         for email in self.emails:
@@ -125,25 +125,15 @@ class Letter:
 
         return recipients
 
-    def __generate_emails(self):
+    def __generate_emails(self, *, test_mode: bool = False):
         """generate emails from csv file"""
         emails = []
 
-        # validate template fields
         email_template = Path(self.paths["content"]).read_text(encoding="utf-8")
-        fields = re.findall(r"\$([_a-z][_a-z0-9]*)", email_template, re.M)
-        for field in fields:
-            if field not in (*self.csv[0].keys(), "sender"):
-                logging.error(f"letter template field '{field}' not found in csv")
-                logging.error(
-                    f"letter template: {Path(self.paths['content']).read_text()}"
-                )
-                logging.error(
-                    f"letter csv: {Path(self.paths['recipients']).read_text()}"
-                )
-                richError(
-                    f"letter template field '{field}' not found in csv, please check {self.paths['content']} and {self.paths['recipients']}"
-                )
+
+        if not self.validate_email_content(email_template, self.csv[0].keys(), verbose=True):
+            return
+        
         email_template = Template(email_template)
 
         # create attachments
@@ -163,6 +153,8 @@ class Letter:
         for recipient in self.csv:
             email = self.__generate_email(recipient, email_template, mime_attachments)
             emails.append(email)
+            if test_mode:
+                break
         return emails
 
     def __generate_email(
@@ -418,9 +410,9 @@ class Letter:
         for field in template_fields:
             if field not in csv_indexes:
                 if verbose:
-                    logging.error(f"letter template field '{field}' not found in csv")
+                    logging.error(f"letter template has field '{field}', but is not found in csv")
                     richError(
-                        f"letter template field '{field}' not found in csv",
+                        f"letter template has field '{field}', but is not found in csv",
                         terminate=False,
                     )
                     is_valid = False

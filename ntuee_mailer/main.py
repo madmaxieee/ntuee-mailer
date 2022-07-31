@@ -31,7 +31,7 @@ def send(
     letter_path: Optional[Path] = typer.Argument(
         None, help="Path to letter", exists=True, file_okay=False
     ),
-    test: bool = typer.Option(
+    test_mode: bool = typer.Option(
         False, "--test", "-t", help="Test mode: send mail to yourself"
     ),
     config_path: Path = typer.Option(
@@ -52,7 +52,7 @@ def send(
         max=5,
         clamp=True,
     ),
-    dryRun: bool = typer.Option(
+    dry_run: bool = typer.Option(
         False, "--dry-run", help="Dry run: do not send mails"
     ),
 ):
@@ -81,11 +81,11 @@ def send(
 
     setup_logger(letter_path / "log.txt", debugLevel)
 
-    if test:
+    if test_mode:
         print("[blue]Entering test mode...\n")
         time.sleep(1)
 
-    if dryRun:
+    if dry_run:
         print("[blue]Entering dry run mode...\n")
         time.sleep(1)
 
@@ -94,9 +94,10 @@ def send(
     emails = Letter(
         letter_path,
         auto_mailer_config["account"]["name"],
+        test_mode=test_mode,
     )
     auto_mailer.login()
-    auto_mailer.send_emails(emails, test=test, dry=dryRun)
+    auto_mailer.send_emails(emails, test_mode=test_mode, dry=dry_run)
     auto_mailer.check_bounce_backs()
     richSuccess(
         f"{auto_mailer.success_count} / {auto_mailer.total_count} emails sent successfully"

@@ -131,7 +131,7 @@ class AutoMailer:
         self.password = password
         return userid, password
 
-    def send_emails(self, letter: Letter, test: bool = False, dry: bool = False) -> None:
+    def send_emails(self, letter: Letter, *, test_mode: bool = False, dry: bool = False) -> None:
         """send emails"""
         if self.verbose:
             print("-" * 50)
@@ -144,7 +144,7 @@ class AutoMailer:
             ):
                 logging.info("User cancelled on checking content")
                 richError("Canceled", prefix="")
-
+        
         if not Confirm.ask(
             f"""
 You are about to send email{'s' if len(letter) > 1 else ''} 
@@ -171,46 +171,44 @@ Do you want to continue?""",
             "•",
             TimeRemainingColumn(),
         )
-
+        
         with progress:
             logging.info(f"Sending {len(letter)} emails")
             for email in progress.track(letter, description="Sending emails..."):
                 self.__server_rest(progress)
                 
-                if test:
-                    email["To"] = complete_school_email(self.userid)
-                
                 if not dry:
-                    success = self.send_email(email)
+                    success = self.send_email(email, test_mode=test_mode)
                 else:
                     success = True
 
                 if success:
                     if self.verbose:
                         progress.print(
-                            f"[green]successfully sent email to {email['To']}"
+                            f"[green]successfully sent email to {(complete_school_email(self.userid)+' (yourself)') if test_mode else email['To']}"
                         )
                 else:
-                    progress.print(f'[red]failed to send email to {email["To"]}')
-
-                # in test mode, send only one mail and quit
-                if test:
-                    break
+                    progress.print(f"[red]failed to send email to {(complete_school_email(self.userid)+' (yourself)') if test_mode else email['To']}")
 
             if dry:
                 print("[red]This is a dry run, no emails were actually sent")
 
 
-    def send_email(self, email: MIMEMultipart) -> None:
+    def send_email(self, email: MIMEMultipart, *, test_mode: bool=False) -> None:
         """send email"""
         if self.SMTPserver is None:
             richError("SMTP server is not connected, please connect first")
 
         self.total_count += 1
 
-        toaddrs = email["To"].split(",")
-        ccaddrs = email["Cc"].split(",") if email["Cc"] is not None else []
-        bccaddrs = email["Bcc"].split(",") if email["Bcc"] is not None else []
+        if test_mode:
+            toaddrs = complete_school_email(self.userid)
+            ccaddrs = ""
+            bccaddrs = ""
+        else:
+            toaddrs = email["To"].split(",")
+            ccaddrs = email["Cc"].split(",") if email["Cc"] is not None else []
+            bccaddrs = email["Bcc"].split(",") if email["Bcc"] is not None else []
 
         try:
             self.SMTPserver.sendmail(
