@@ -216,6 +216,7 @@ def config(
                     f"Enter new value for [blue]{section}.{key}",
                     password=(key == "password"),
                 )
+                new_value = new_value.encode(ENCODING).decode("utf-8")
                 config[section][key] = new_value
                 richSuccess(f"{section}.{key} updated")
 
