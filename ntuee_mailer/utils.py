@@ -2,7 +2,6 @@ import typer
 from rich import print
 from rich.progress import Progress, TextColumn
 from rich.prompt import Confirm
-from configparser import ConfigParser
 from cerberus.errors import ValidationError, ErrorList
 
 import logging

@@ -63,25 +63,18 @@ configure the auto mailer
 
 a valid config file should have the following structure:
 
+```
 [smtp]
-
 host=smtps.ntu.edu.tw
-
 port=465
-
 timeout=5
-
 [pop3]
-
 host=msa.ntu.edu.tw
-
 port=995
-
 timeout=5
-
 [account]
-
 name=John Doe
+```
 
 **Usage**:
 
