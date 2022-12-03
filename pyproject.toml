@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "ntuee-mailer"
-version = "2.0.7"
+version = "2.0.8"
 description = "an auto mailer to send emails in batch for you"
-authors = ["zhuang-jia-xu <76544194+zhuang-jia-xu@users.noreply.github.com>"]
+authors = ["madmaxieee <76544194+madmaxieee@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/NTUEE-SAAD/mailing"
+repository = "https://github.com/madmaxieee/ntuee-mailer"
 packages = [{ include = "ntuee_mailer" }]
 
 [tool.poetry.scripts]
