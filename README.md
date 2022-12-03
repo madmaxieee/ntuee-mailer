@@ -33,19 +33,15 @@ check wether a directory is a valid letter
 
 a letter folder should be structured as follows:
 
-letter
-
+```
+letter_name
 ├── attachments
-
 │ ├── ...
-
 │ └── ...
-
 ├── config.yml
-
 ├── content.html
-
 └── recipients.csv
+```
 
 **Usage**:
 
@@ -151,3 +147,28 @@ $ ntuee-mailer test [OPTIONS]
 **Options**:
 
 - `--help`: Show this message and exit.
+
+## mail format
+
+a letter folder should be structured as follows:
+```
+letter_name
+├── attachments
+│ ├── ...
+│ └── ...
+├── config.yml
+├── content.html
+└── recipients.csv
+```
+
+### content.html
+The content of the email. `$<pattern>` would be replaced by the corresponding field defined in `recipients.csv`
+
+### recipients.csv
+Stores the data related to recipients. The value of "name" field is will be used to replace `$name` in `content.html`, whose behavior can be modified in `config.yml`. The "email" field stores the recipients email. The emails will be CCed and BCCed to the emails in "cc" and "bcc" field. One recipients may have several CC and BCCs, emails should be separated with spaces. "email", "cc" and "bcc" are reserved fields, they cannot be used in html pattern, any additional field will be replaced in the html. "name" and "email" fields are required
+
+### config.yml
+Configuration of each email. "subjects" defines subject, "from" defines the name recipients see in their email client. "recipientTitle" and "lastNameOnly" modifies the behavior of `$name` in `content.html`.
+
+### attachments
+The attachment directory. Any file placed in this folder will be attached to the email. Any file with name started with '.' will be ignored, i.e. .git, .DS_STORE.
