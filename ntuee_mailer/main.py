@@ -134,13 +134,15 @@ def check(
     """
     check wether a directory is a valid letter\n
     a letter folder should be structured as follows:\n
-    letter\n
+    ```\n
+    letter_name\n
     ├── attachments\n
     │   ├── ...\n
     │   └── ...\n
     ├── config.yml\n
     ├── content.html\n
     └── recipients.csv\n
+    ```\n
     """
 
     print("Checking letter")
@@ -212,7 +214,7 @@ def config(
             ):
                 new_value = Prompt.ask(
                     f"Enter new value for [blue]{section}.{key}",
-                    password=key == "password",
+                    password=(key == "password"),
                 )
                 config[section][key] = new_value
                 richSuccess(f"{section}.{key} updated")

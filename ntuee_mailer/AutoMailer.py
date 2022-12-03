@@ -273,7 +273,7 @@ Do you want to continue?""",
                 # however, we only care about the bounce back notifications,
                 # which are always in English
                 try:
-                    email_contents.append(b"\r\n".join(msg).decode("utf-8"))
+                    email_contents.append(b"\r\n".join(msg).decode(ENCODING))
                 except:
                     continue
 
@@ -367,7 +367,7 @@ Do you want to continue?""",
         if not os.path.exists(config_path):
             richError(f"{config_path} not found")
 
-        automailer_config.read({config_path}, encoding="utf-8")
+        automailer_config.read({config_path}, encoding=ENCODING)
 
         sections = automailer_config.sections()
 

@@ -129,7 +129,7 @@ class Letter:
         """generate emails from csv file"""
         emails = []
 
-        email_template = Path(self.paths["content"]).read_text(encoding="utf-8")
+        email_template = Path(self.paths["content"]).read_text(encoding=ENCODING)
 
         if not self.validate_email_content(email_template, self.csv[0].keys(), verbose=True):
             return
@@ -176,7 +176,7 @@ class Letter:
         if "cc" in self.config:
             cc_list += self.config["cc"]
         if "cc" in recipient:
-            cc_list += [recipient["cc"]]
+            cc_list += recipient["cc"].split(" ")
         if len(cc_list) > 0: 
             email["Cc"] = ",".join(cc_list)
 
@@ -184,7 +184,7 @@ class Letter:
         if "bcc" in self.config:
             bcc_list += self.config["bcc"]
         if "bcc" in recipient:
-            bcc_list += [recipient["bcc"]]
+            bcc_list += recipient["bcc"].split(" ")
         if len(bcc_list) > 0:
             email["Bcc"] = ",".join(bcc_list)
 
@@ -219,16 +219,16 @@ class Letter:
         """load letter from config"""
         file_name = PurePath(file_path).name
         if file_name == "content.html":
-            return Path(file_path).read_text(encoding="utf-8")
+            return Path(file_path).read_text(encoding=ENCODING)
 
         elif file_name == "config.yml" or file_name == "config.yaml":
-            with open(file_path, encoding="utf-8") as f:
+            with open(file_path, encoding=ENCODING) as f:
                 letter_config = yaml.load(f, Loader=yaml.FullLoader)
 
             return letter_config
 
         elif file_name == "recipients.csv":
-            with open(file_path, encoding="utf-8") as f:
+            with open(file_path, encoding=ENCODING) as f:
                 reader = csv.DictReader(f)
                 recipients = [row for row in reader]
 
