@@ -1,11 +1,3 @@
-##########################################################################
-# File:         AutoMailer.py                                            #
-# Purpose:      Automatically send batch of mails                        #
-# Last changed: 2015/06/21                                               #
-# Author:       zhuang-jia-xu                                            #
-# Edited:                                                                #
-# Copyleft:     (ɔ)NTUEE                                                 #
-##########################################################################
 from rich import print
 from rich.progress import (
     Progress,
@@ -111,9 +103,7 @@ class AutoMailer:
                 default=self.config["account"]["userid"],
             )
         else:
-            userid = Prompt.ask(
-                "[blue]Username[/blue] (e.g. b09901000)",
-            )
+            userid = Prompt.ask("[blue]Username[/blue] (e.g. b09901000)",)
             userid = userid.strip()
 
             save_id = Confirm.ask("[blue]remember this userid?[/blue]", default=True)
@@ -131,11 +121,13 @@ class AutoMailer:
         self.password = password
         return userid, password
 
-    def send_emails(self, letter: Letter, *, test_mode: bool = False, dry: bool = False) -> None:
+    def send_emails(
+        self, letter: Letter, *, test_mode: bool = False, dry: bool = False
+    ) -> None:
         """send emails"""
         if self.verbose:
             print("-" * 50)
-            print(Path(letter.paths["content"]).read_text())
+            print(Path(letter.paths["content"]).read_text(encoding="utf-8"))
             print("-" * 50)
             if not countdownConfirm(
                 "Are you sure to send emails with the content above?",
@@ -144,7 +136,7 @@ class AutoMailer:
             ):
                 logging.info("User cancelled on checking content")
                 richError("Canceled", prefix="")
-        
+
         if not Confirm.ask(
             f"""
 You are about to send email{'s' if len(letter) > 1 else ''} 
@@ -171,12 +163,12 @@ Do you want to continue?""",
             "•",
             TimeRemainingColumn(),
         )
-        
+
         with progress:
             logging.info(f"Sending {len(letter)} emails")
             for email in progress.track(letter, description="Sending emails..."):
                 self.__server_rest(progress)
-                
+
                 if not dry:
                     success = self.send_email(email, test_mode=test_mode)
                 else:
@@ -188,13 +180,14 @@ Do you want to continue?""",
                             f"[green]successfully sent email to {(complete_school_email(self.userid)+' (yourself)') if test_mode else email['To']}"
                         )
                 else:
-                    progress.print(f"[red]failed to send email to {(complete_school_email(self.userid)+' (yourself)') if test_mode else email['To']}")
+                    progress.print(
+                        f"[red]failed to send email to {(complete_school_email(self.userid)+' (yourself)') if test_mode else email['To']}"
+                    )
 
             if dry:
                 print("[red]This is a dry run, no emails were actually sent")
 
-
-    def send_email(self, email: MIMEMultipart, *, test_mode: bool=False) -> None:
+    def send_email(self, email: MIMEMultipart, *, test_mode: bool = False) -> None:
         """send email"""
         if self.SMTPserver is None:
             richError("SMTP server is not connected, please connect first")
@@ -212,9 +205,7 @@ Do you want to continue?""",
 
         try:
             self.SMTPserver.sendmail(
-                email["From"],
-                toaddrs + ccaddrs + bccaddrs,
-                email.as_string(),
+                email["From"], toaddrs + ccaddrs + bccaddrs, email.as_string(),
             )
         except Exception as e:
             logging.error(e)
@@ -234,8 +225,7 @@ Do you want to continue?""",
 
         logging.info("Checking bounce backs")
         progress = Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"),
         )
         with progress:
             progress.add_task(description="checking for bounce-backs...", total=None)
@@ -273,7 +263,7 @@ Do you want to continue?""",
                 # however, we only care about the bounce back notifications,
                 # which are always in English
                 try:
-                    email_contents.append(b"\r\n".join(msg).decode(ENCODING))
+                    email_contents.append(b"\r\n".join(msg).decode("utf-8"))
                 except:
                     continue
 
@@ -314,6 +304,7 @@ Do you want to continue?""",
 
     def __server_rest(self, progress):
         """for bypassing email server limitation"""
+
         def rest(seconds):
             progress.print(f"[blue]resting for {seconds} seconds...")
             time.sleep(seconds)
@@ -367,7 +358,7 @@ Do you want to continue?""",
         if not os.path.exists(config_path):
             richError(f"{config_path} not found")
 
-        automailer_config.read({config_path}, encoding=ENCODING)
+        automailer_config.read({config_path}, encoding="utf-8")
 
         sections = automailer_config.sections()
 
@@ -393,9 +384,7 @@ Do you want to continue?""",
                 f"mailer config validation failed, please check {config_path}"
             )
             logging.critical(config)
-            richError(
-                f"mailer config validation failed, please check {config_path}",
-            )
+            richError(f"mailer config validation failed, please check {config_path}",)
 
     @classmethod
     def validate_config(cls, config: dict, verbose=False) -> bool:
@@ -417,7 +406,7 @@ Do you want to continue?""",
         for section, vals in config.items():
             new_config_parser[section] = vals
 
-        with open(CONFIG_PATH, "w") as f:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             new_config_parser.write(f)
 
         return True

@@ -1,11 +1,3 @@
-##########################################################################
-# File:         utils.py                                                 #
-# Purpose:      Automatically send batch of mails                        #
-# Last changed: 2015/06/21                                               #
-# Author:       zhuang-jia-xu                                            #
-# Edited:                                                                #
-# Copyleft:     (ɔ)NTUEE                                                 #
-##########################################################################
 import typer
 from rich import print
 from rich.progress import Progress, TextColumn

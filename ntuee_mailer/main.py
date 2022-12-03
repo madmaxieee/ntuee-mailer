@@ -1,11 +1,3 @@
-##########################################################################
-# File:         main.py                                                  #
-# Purpose:      Automatically send batch of mails                        #
-# Last changed: 2022/07/16                                               #
-# Author:       zhuang-jia-xu                                            #
-# Edited:                                                                #
-# Copyleft:     (ɔ)NTUEE                                                 #
-##########################################################################
 import typer
 from rich import print
 from rich.prompt import Confirm, Prompt
@@ -44,25 +36,14 @@ def send(
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Quiet mode: less output"),
     debugLevel: int = typer.Option(
-        logging.NOTSET,
-        "--debug",
-        "-d",
-        help="Debug level",
-        min=0,
-        max=5,
-        clamp=True,
+        logging.NOTSET, "--debug", "-d", help="Debug level", min=0, max=5, clamp=True,
     ),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Dry run: do not send mails"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run: do not send mails"),
 ):
     """send emails to a list of recipients as configured in your letter"""
     if letter_path is None:
         letter_names = list(
-            filter(
-                lambda letter: Path(letter).is_dir(),
-                os.listdir("."),
-            )
+            filter(lambda letter: Path(letter).is_dir(), os.listdir("."),)
         )
 
         if len(letter_names) == 0:
@@ -92,9 +73,7 @@ def send(
     auto_mailer_config = AutoMailer.load_mailer_config(config_path)
     auto_mailer = AutoMailer(auto_mailer_config, quiet=quiet)
     emails = Letter(
-        letter_path,
-        auto_mailer_config["account"]["name"],
-        test_mode=test_mode,
+        letter_path, auto_mailer_config["account"]["name"], test_mode=test_mode,
     )
     auto_mailer.login()
     auto_mailer.send_emails(emails, test_mode=test_mode, dry=dry_run)
@@ -125,10 +104,7 @@ def new(letter_name: Optional[str] = typer.Argument(..., help="Name of letter"))
 @app.command()
 def check(
     letter_path: Path = typer.Argument(
-        ...,
-        help="Path to letter directory",
-        exists=True,
-        file_okay=False,
+        ..., help="Path to letter directory", exists=True, file_okay=False,
     ),
 ):
     """
@@ -185,7 +161,7 @@ def config(
     """
 
     if list_config:
-        typer.echo(Path(CONFIG_PATH).read_text())
+        typer.echo(Path(CONFIG_PATH).read_text(encoding="utf-8"))
         return
 
     if reset:
@@ -216,8 +192,9 @@ def config(
                     f"Enter new value for [blue]{section}.{key}",
                     password=(key == "password"),
                 )
-                new_value = new_value.encode(ENCODING).decode("utf-8")
                 config[section][key] = new_value
                 richSuccess(f"{section}.{key} updated")
+
+    AutoMailer.save_config(config)
 
     richSuccess(f"Config file updated to {CONFIG_PATH}")

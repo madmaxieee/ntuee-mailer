@@ -1,11 +1,3 @@
-##########################################################################
-# File:         Letter.py                                                #
-# Purpose:      Automatically send batch of mails                        #
-# Last changed: 2015/06/21                                               #
-# Author:       zhuang-jia-xu                                            #
-# Edited:                                                                #
-# Copyleft:     (ɔ)NTUEE                                                 #
-##########################################################################
 from cerberus import Validator
 from email_validator import validate_email, caching_resolver
 
@@ -40,6 +32,7 @@ v = Validator(letter_config_schema)
 
 RESERVED_FIELDS = ("email", "cc", "bcc")
 REQUIRED_FIELDS = ("email", "name")
+
 
 class Letter:
     paths: dict = None
@@ -119,7 +112,7 @@ class Letter:
         is_valid = self.validate_recipients(recipients, verbose=True)
 
         if not is_valid:
-            logging.error(f"letter csv: {Path(self.paths['recipients']).read_text()}")
+            logging.error(f"letter csv: {Path(self.paths['recipients']).read_text(encoding='utf-8')}")
             richError(f"failed to load recipients from {self.paths['recipients']}")
             return
 
@@ -129,11 +122,13 @@ class Letter:
         """generate emails from csv file"""
         emails = []
 
-        email_template = Path(self.paths["content"]).read_text(encoding=ENCODING)
+        email_template = Path(self.paths["content"]).read_text(encoding="utf-8")
 
-        if not self.validate_email_content(email_template, self.csv[0].keys(), verbose=True):
+        if not self.validate_email_content(
+            email_template, self.csv[0].keys(), verbose=True
+        ):
             return
-        
+
         email_template = Template(email_template)
 
         # create attachments
@@ -177,7 +172,7 @@ class Letter:
             cc_list += self.config["cc"]
         if "cc" in recipient:
             cc_list += recipient["cc"].split(" ")
-        if len(cc_list) > 0: 
+        if len(cc_list) > 0:
             email["Cc"] = ",".join(cc_list)
 
         bcc_list = []
@@ -219,16 +214,16 @@ class Letter:
         """load letter from config"""
         file_name = PurePath(file_path).name
         if file_name == "content.html":
-            return Path(file_path).read_text(encoding=ENCODING)
+            return Path(file_path).read_text(encoding="utf-8")
 
         elif file_name == "config.yml" or file_name == "config.yaml":
-            with open(file_path, encoding=ENCODING) as f:
+            with open(file_path, encoding="utf-8") as f:
                 letter_config = yaml.load(f, Loader=yaml.FullLoader)
 
             return letter_config
 
         elif file_name == "recipients.csv":
-            with open(file_path, encoding=ENCODING) as f:
+            with open(file_path, encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 recipients = [row for row in reader]
 
@@ -239,12 +234,14 @@ class Letter:
                         temp_row[key.strip()] = value.strip()
 
                     if "email" in temp_row:
-                        temp_row["email"] = complete_school_email(temp_row["email"].lower())
+                        temp_row["email"] = complete_school_email(
+                            temp_row["email"].lower()
+                        )
                     if "cc" in temp_row:
                         temp_row["cc"] = complete_school_email(temp_row["cc"].lower())
                     if "bcc" in temp_row:
                         temp_row["bcc"] = complete_school_email(temp_row["bcc"].lower())
-                    
+
                     stripped_recipients.append(temp_row)
 
             return stripped_recipients
@@ -335,7 +332,7 @@ class Letter:
                     is_valid = False
                 else:
                     return False
-                    
+
         for row in stripped_recipients:
             for i, (key, value) in enumerate(row.items()):
                 if key is None:
@@ -410,7 +407,9 @@ class Letter:
         for field in template_fields:
             if field not in csv_indexes:
                 if verbose:
-                    logging.error(f"letter template has field '{field}', but is not found in csv")
+                    logging.error(
+                        f"letter template has field '{field}', but is not found in csv"
+                    )
                     richError(
                         f"letter template has field '{field}', but is not found in csv",
                         terminate=False,
