@@ -84,7 +84,7 @@ def parse_validation_error(errors: ErrorList) -> None:
 
 def complete_school_email(email_addr) -> list:
     """
-    Autocomplete school email addresss
+    Autocomplete school email address
     """
     if type(email_addr) == list:
         return [complete_school_email(addr) for addr in email_addr]
