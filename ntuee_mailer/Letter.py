@@ -1,18 +1,18 @@
-from cerberus import Validator
-from email_validator import validate_email, caching_resolver
-
-import os
 import csv
-import yaml
-import re
 import logging
-from typing import List
-from pathlib import Path, PurePath
-from email.mime.multipart import MIMEMultipart
+import os
+import re
 from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate
+from pathlib import Path, PurePath
 from string import Template
+from typing import List
+
+import yaml
+from cerberus import Validator
+from email_validator import caching_resolver, validate_email
 
 from .utils import *
 
@@ -112,7 +112,9 @@ class Letter:
         is_valid = self.validate_recipients(recipients, verbose=True)
 
         if not is_valid:
-            logging.error(f"letter csv: {Path(self.paths['recipients']).read_text(encoding='utf-8')}")
+            logging.error(
+                f"letter csv: {Path(self.paths['recipients']).read_text(encoding='utf-8')}"
+            )
             richError(f"failed to load recipients from {self.paths['recipients']}")
             return
 
@@ -170,7 +172,7 @@ class Letter:
         cc_list = []
         if "cc" in self.config:
             cc_list += self.config["cc"]
-        if "cc" in recipient:
+        if "cc" in recipient and recipient["cc"] != "":
             cc_list += recipient["cc"].split(" ")
         if len(cc_list) > 0:
             email["Cc"] = ",".join(cc_list)
@@ -178,7 +180,7 @@ class Letter:
         bcc_list = []
         if "bcc" in self.config:
             bcc_list += self.config["bcc"]
-        if "bcc" in recipient:
+        if "bcc" in recipient and recipient["bcc"] != "":
             bcc_list += recipient["bcc"].split(" ")
         if len(bcc_list) > 0:
             email["Bcc"] = ",".join(bcc_list)

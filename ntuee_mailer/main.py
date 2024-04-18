@@ -8,7 +8,6 @@ import shutil
 import time
 from pathlib import Path
 from typing import Optional
-from configparser import ConfigParser
 
 from .utils import *
 from .AutoMailer import AutoMailer
